@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyperTuna Relay Server Interface</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            border-left-color: #077033;
+        }
+        .error {
+            border-left-color: #e74c3c;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #3498db;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .relay-list {
+            margin-top: 20px;
+        }
+        .relay-item {
+            background-color: white;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+        }
+        .status-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .status-card {
+            flex: 1;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+        }
+        .status-card:last-child {
+            margin-right: 0;
+        }
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .status-value {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .logs {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+        .log-time {
+            color: #a6e22e;
+        }
+        .log-message {
+            color: #e6db74;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .metrics-card {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+        }
+        .metrics-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .metrics-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .metrics-label {
+            color: #555;
+        }
+        .metrics-value {
+            font-weight: 500;
+        }
+        .service-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-healthy {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-degraded {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-error, .status-disconnected, .status-unhealthy {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-initializing, .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .copy-btn {
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            padding: 2px 6px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background: #333;
+        }
+        .peer-list {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #f7f9fb;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .peer-list ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+        }
+        .peer-list li {
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .peer-key {
+            font-family: monospace;
+            font-size: 12px;
+            flex: 0 0 180px;
+        }
+        .peer-lastseen {
+            color: #666;
+            font-size: 12px;
+        }
+        @media (max-width: 768px) {
+            .status-panel {
+                flex-direction: column;
+            }
+            .status-card {
+                margin-right: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>HyperTuna Relay Server Interface</h1>
+    
+    <div class="status-panel">
+        <div class="status-card">
+            <div class="status-title">Server Status</div>
+            <div class="status-value" id="server-status">Loading...</div>
+        </div>
+        <div class="status-card">
+            <div class="status-title">Hypertele Status</div>
+            <div class="status-value" id="hypertele-status">Unknown</div>
+        </div>
+        <div class="status-card">
+            <div class="status-title">Hyperdrive Status</div>
+            <div class="status-value" id="hyperdrive-status">Unknown</div>
+        </div>
+        <div class="status-card">
+            <div class="status-title">Active Relays</div>
+            <div class="status-value" id="active-relays-count">0</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-target="active-relays">Active Relays</div>
+        <div class="tab" data-target="create-relay">Create Relay</div>
+        <div class="tab" data-target="join-relay">Join Relay</div>
+        <div class="tab" data-target="metrics">Metrics</div>
+        <div class="tab" data-target="logs">Logs</div>
+    </div>
+
+    <div class="tab-content active" id="active-relays">
+        <div class="card">
+            <h2>Active Relays</h2>
+            <button id="refresh-relays-btn">Refresh List</button>
+            <button id="register-gateway-btn">Re-register with Gateway</button>
+            <div id="register-response" class="response" style="display: none;"></div>
+            <div id="relay-list" class="relay-list">
+                <p>Loading relays...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="create-relay">
+        <div class="card">
+            <h2>Create New Relay</h2>
+            <div class="form-group">
+                <label for="relay-name">Relay Name:</label>
+                <input type="text" id="relay-name" placeholder="Enter a name for the relay">
+            </div>
+            <div class="form-group">
+                <label for="relay-description">Relay Description:</label>
+                <textarea id="relay-description" rows="3" placeholder="Enter a description for the relay"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="storage-dir">Storage Directory (optional):</label>
+                <input type="text" id="storage-dir" placeholder="e.g., ./storage-my-relay">
+            </div>
+            <button id="create-relay-btn">Create Relay</button>
+            <div id="create-response" class="response" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="join-relay">
+        <div class="card">
+            <h2>Join Existing Relay</h2>
+            <div class="form-group">
+                <label for="relay-key">Relay Key:</label>
+                <input type="text" id="relay-key" placeholder="Enter the relay key">
+            </div>
+            <div class="form-group">
+                <label for="join-storage-dir">Storage Directory (optional):</label>
+                <input type="text" id="join-storage-dir" placeholder="e.g., ./storage-joined-relay">
+            </div>
+            <button id="join-relay-btn">Join Relay</button>
+            <div id="join-response" class="response" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="metrics">
+        <div class="card">
+            <h2>Server Metrics</h2>
+            <button id="refresh-metrics-btn">Refresh Metrics</button>
+            <div id="metrics-display">
+                <div class="metrics-card">
+                    <div class="metrics-title">Request Metrics</div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Total Requests:</span>
+                        <span class="metrics-value" id="total-requests">0</span>
+                    </div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Successful Requests:</span>
+                        <span class="metrics-value" id="successful-requests">0</span>
+                    </div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Failed Requests:</span>
+                        <span class="metrics-value" id="failed-requests">0</span>
+                    </div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Success Rate:</span>
+                        <span class="metrics-value" id="success-rate">0%</span>
+                    </div>
+                </div>
+                <div id="peer-metrics">
+                    <!-- Peer metrics will be inserted here by JavaScript -->
+                </div>
+                <div class="metrics-card">
+                    <div class="metrics-title">System Information</div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Uptime:</span>
+                        <span class="metrics-value" id="uptime">0 seconds</span>
+                    </div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Last Health Check:</span>
+                        <span class="metrics-value" id="last-check">Never</span>
+                    </div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Public Key:</span>
+                        <span class="metrics-value" id="public-key">Unknown</span>
+                        <button class="copy-btn" data-copy="public-key">Copy</button>
+                    </div>
+                    <div class="metrics-item">
+                        <span class="metrics-label">Gateway URL:</span>
+                        <span class="metrics-value" id="gateway-url">Unknown</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="logs">
+        <div class="card">
+            <h2>Server Logs</h2>
+            <button id="refresh-logs-btn">Refresh Logs</button>
+            <div id="log-entries" class="logs">
+                <p>Loading logs...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get API base URL
+        const API_BASE_URL = window.location.origin;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Setup tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const target = this.getAttribute('data-target');
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+            
+            // Setup copy buttons
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-copy');
+                    const text = document.getElementById(targetId).textContent;
+                    navigator.clipboard.writeText(text)
+                        .then(() => {
+                            this.textContent = 'Copied!';
+                            setTimeout(() => {
+                                this.textContent = 'Copy';
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Could not copy text: ', err);
+                        });
+                });
+            });
+            
+            // Initial data load
+            try {
+                await refreshHealthStatus();
+                await refreshRelayList();
+                await refreshMetrics();
+                await refreshLogs();
+                
+                // Set up periodic refreshes
+                setInterval(refreshHealthStatus, 10000);
+                setInterval(refreshMetrics, 30000);
+                setInterval(refreshLogs, 30000);
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
+                showError('Error loading data. Make sure the server is running.');
+            }
+            
+            // Setup button event handlers
+            setupEventHandlers();
+        });
+        
+        // Setup event handlers for buttons
+        function setupEventHandlers() {
+            // Refresh relays
+            document.getElementById('refresh-relays-btn').addEventListener('click', refreshRelayList);
+            
+            // Refresh metrics
+            document.getElementById('refresh-metrics-btn').addEventListener('click', refreshMetrics);
+            
+            // Refresh logs
+            document.getElementById('refresh-logs-btn').addEventListener('click', refreshLogs);
+            
+            // Create relay
+            document.getElementById('create-relay-btn').addEventListener('click', createRelay);
+            
+            // Join relay
+            document.getElementById('join-relay-btn').addEventListener('click', joinRelay);
+            
+            // Register with gateway
+            document.getElementById('register-gateway-btn').addEventListener('click', registerWithGateway);
+        }
+        
+        // Format time duration
+        function formatUptime(milliseconds) {
+            const seconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) {
+                return `${days} day${days > 1 ? 's' : ''}, ${hours % 24} hour${hours % 24 !== 1 ? 's' : ''}`;
+            } else if (hours > 0) {
+                return `${hours} hour${hours !== 1 ? 's' : ''}, ${minutes % 60} minute${minutes % 60 !== 1 ? 's' : ''}`;
+            } else if (minutes > 0) {
+                return `${minutes} minute${minutes !== 1 ? 's' : ''}, ${seconds % 60} second${seconds % 60 !== 1 ? 's' : ''}`;
+            } else {
+                return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+            }
+        }
+        
+        // Format timestamp to local time
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Never';
+            
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+        
+        // Show response message
+        function showResponse(elementId, message, type = '') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'response';
+            if (type) {
+                element.classList.add(type);
+            }
+            element.style.display = 'block';
+        }
+        
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'response error';
+            errorDiv.textContent = message;
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '10px';
+            errorDiv.style.right = '10px';
+            errorDiv.style.zIndex = '1000';
+            errorDiv.style.maxWidth = '300px';
+            
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+        
+        // API calls
+        
+        // Refresh health status
+        async function refreshHealthStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health/details`);
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                
+                const data = await response.json();
+                
+                // Update status elements
+                updateStatusElement('server-status', data.status);
+                updateStatusElement('hypertele-status', data.services?.hypertele);
+                updateStatusElement('hyperdrive-status', data.services?.hyperdrive);
+                document.getElementById('active-relays-count').textContent = data.activeRelays?.count || '0';
+                
+                return data;
+            } catch (error) {
+                console.error('Error refreshing health status:', error);
+                
+                // Set offline status
+                updateStatusElement('server-status', 'error');
+                updateStatusElement('hypertele-status', 'disconnected');
+                updateStatusElement('hyperdrive-status', 'disconnected');
+                document.getElementById('active-relays-count').textContent = '0';
+                
+                throw error;
+            }
+        }
+        
+        // Update a status element with the appropriate styling
+        function updateStatusElement(elementId, status) {
+            const element = document.getElementById(elementId);
+            
+            // Clear existing classes
+            element.className = 'status-value';
+            
+            // Default to 'error' if status is undefined
+            if (!status) {
+                element.classList.add('status-error');
+                element.textContent = 'Unknown';
+                return;
+            }
+            
+            // Add new status class - safely handle any status value
+            const safeStatus = String(status).toLowerCase();
+            element.classList.add(`status-${safeStatus}`);
+            
+            // Set the text with proper capitalization
+            element.textContent = safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1);
+        }
+        
+        // Refresh relay list with peer information
+        async function refreshRelayList() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health/details`);
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                
+                const data = await response.json();
+                const relayListElement = document.getElementById('relay-list');
+                
+                if (data.activeRelays && data.activeRelays.items && data.activeRelays.items.length > 0) {
+                    let html = '';
+                    data.activeRelays.items.forEach(relay => {
+                        // Create the relay item
+                        let relayHtml = `
+                            <div class="relay-item">
+                                <div><strong>Relay Key:</strong> ${relay.relayKey} <button class="copy-btn" onclick="navigator.clipboard.writeText('${relay.relayKey}')">Copy</button></div>
+                                <div><strong>Connection URL:</strong> ${relay.connectionUrl} <button class="copy-btn" onclick="navigator.clipboard.writeText('${relay.connectionUrl}')">Copy</button></div>
+                                <div><strong>Connected Peers:</strong> ${relay.peerCount || 0}</div>
+                        `;
+                        
+                        // Add peer details if available
+                        if (relay.peers && relay.peers.length > 0) {
+                            relayHtml += `<div class="peer-list"><strong>Peer Details:</strong><ul>`;
+                            relay.peers.forEach(peer => {
+                                const statusClass = peer.status === 'healthy' ? 'status-healthy' : 'status-degraded';
+                                const lastSeen = formatTimestamp(peer.lastSeen);
+                                relayHtml += `
+                                    <li>
+                                        <span class="peer-key">${peer.publicKey.substring(0, 16)}...</span>
+                                        <span class="service-status ${statusClass}">${peer.status}</span>
+                                        <span class="peer-lastseen">Last seen: ${lastSeen}</span>
+                                    </li>
+                                `;
+                            });
+                            relayHtml += `</ul></div>`;
+                        }
+                        
+                        // Close the relay item
+                        relayHtml += `</div>`;
+                        html += relayHtml;
+                    });
+                    relayListElement.innerHTML = html;
+                } else {
+                    relayListElement.innerHTML = '<p>No active relays found.</p>';
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error refreshing relay list:', error);
+                document.getElementById('relay-list').innerHTML = '<p>Error loading relay list.</p>';
+                throw error;
+            }
+        }
+        
+        // Refresh metrics with peer statistics
+        async function refreshMetrics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health/details`);
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                
+                const data = await response.json();
+                
+                // Update request metrics
+                document.getElementById('total-requests').textContent = data.metrics?.totalRequests || '0';
+                document.getElementById('successful-requests').textContent = data.metrics?.successfulRequests || '0';
+                document.getElementById('failed-requests').textContent = data.metrics?.failedRequests || '0';
+                document.getElementById('success-rate').textContent = 
+                    `${data.metrics?.successRate ? data.metrics.successRate.toFixed(2) : '0'}%`;
+                
+                // Update peer metrics if available
+                if (data.metrics?.peers) {
+                    // Add these elements to your metrics-card in the HTML
+                    const peerMetricsHtml = `
+                        <div class="metrics-card">
+                            <div class="metrics-title">Peer Metrics</div>
+                            <div class="metrics-item">
+                                <span class="metrics-label">Total Health Checks:</span>
+                                <span class="metrics-value">${data.metrics.peers.totalChecks}</span>
+                            </div>
+                            <div class="metrics-item">
+                                <span class="metrics-label">Failed Checks:</span>
+                                <span class="metrics-value">${data.metrics.peers.failedChecks}</span>
+                            </div>
+                            <div class="metrics-item">
+                                <span class="metrics-label">Recovered Peers:</span>
+                                <span class="metrics-value">${data.metrics.peers.recoveredPeers}</span>
+                            </div>
+                            <div class="metrics-item">
+                                <span class="metrics-label">Healthy Peers:</span>
+                                <span class="metrics-value">${data.metrics.peers.healthyPeers}</span>
+                            </div>
+                            <div class="metrics-item">
+                                <span class="metrics-label">Unhealthy Peers:</span>
+                                <span class="metrics-value">${data.metrics.peers.unhealthyPeers}</span>
+                            </div>
+                            <div class="metrics-item">
+                                <span class="metrics-label">Circuits Broken:</span>
+                                <span class="metrics-value">${data.metrics.peers.circuitsBroken}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add or update the peer metrics HTML
+                    const peerMetricsElement = document.getElementById('peer-metrics');
+                    if (peerMetricsElement) {
+                        peerMetricsElement.innerHTML = peerMetricsHtml;
+                    } else {
+                        const metricsDisplay = document.getElementById('metrics-display');
+                        const tempDiv = document.createElement('div');
+                        tempDiv.id = 'peer-metrics';
+                        tempDiv.innerHTML = peerMetricsHtml;
+                        metricsDisplay.appendChild(tempDiv);
+                    }
+                }
+                
+                // Update system information
+                document.getElementById('uptime').textContent = formatUptime(data.uptime || 0);
+                document.getElementById('last-check').textContent = formatTimestamp(data.lastCheck);
+                document.getElementById('public-key').textContent = data.publicKey || 'Unknown';
+                document.getElementById('gateway-url').textContent = data.gatewayUrl || 'Unknown';
+                
+                return data;
+            } catch (error) {
+                console.error('Error refreshing metrics:', error);
+                throw error;
+            }
+        }
+        
+        // Refresh logs
+        async function refreshLogs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/logs?limit=100`);
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                
+                const data = await response.json();
+                const logsElement = document.getElementById('log-entries');
+                
+                if (data && data.length > 0) {
+                    let html = '';
+                    data.forEach(entry => {
+                        html += `
+                            <div class="log-entry">
+                                <span class="log-time">[${entry.timestamp}]</span>
+                                <span class="log-message">${entry.message}</span>
+                            </div>
+                        `;
+                    });
+                    logsElement.innerHTML = html;
+                    
+                    // Auto-scroll to bottom
+                    logsElement.scrollTop = logsElement.scrollHeight;
+                } else {
+                    logsElement.innerHTML = '<p>No logs available.</p>';
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error refreshing logs:', error);
+                document.getElementById('log-entries').innerHTML = '<p>Error loading logs.</p>';
+                throw error;
+            }
+        }
+        
+        // Create relay
+        async function createRelay() {
+            try {
+                const name = document.getElementById('relay-name').value.trim();
+                const description = document.getElementById('relay-description').value.trim();
+                const storageDir = document.getElementById('storage-dir').value.trim();
+                
+                if (!name) {
+                    showResponse('create-response', 'Please enter a relay name.', 'error');
+                    return;
+                }
+                
+                showResponse('create-response', 'Creating relay...', '');
+                
+                const response = await fetch(`${API_BASE_URL}/relay/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        storageDir: storageDir || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResponse('create-response', `Success! Relay created with key: ${data.relayKey}`, 'success');
+                    
+                    // Clear form
+                    document.getElementById('relay-name').value = '';
+                    document.getElementById('relay-description').value = '';
+                    document.getElementById('storage-dir').value = '';
+                    
+                    // Refresh relay list
+                    await refreshRelayList();
+                } else {
+                    showResponse('create-response', `Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error creating relay:', error);
+                showResponse('create-response', `Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        // Join relay
+        async function joinRelay() {
+            try {
+                const relayKey = document.getElementById('relay-key').value.trim();
+                const storageDir = document.getElementById('join-storage-dir').value.trim();
+                
+                if (!relayKey) {
+                    showResponse('join-response', 'Please enter a relay key.', 'error');
+                    return;
+                }
+                
+                showResponse('join-response', 'Joining relay...', '');
+                
+                const response = await fetch(`${API_BASE_URL}/relay/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        relayKey,
+                        storageDir: storageDir || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResponse('join-response', `Success! Joined relay with key: ${data.relayKey}`, 'success');
+                    
+                    // Clear form
+                    document.getElementById('relay-key').value = '';
+                    document.getElementById('join-storage-dir').value = '';
+                    
+                    // Refresh relay list
+                    await refreshRelayList();
+                } else {
+                    showResponse('join-response', `Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error joining relay:', error);
+                showResponse('join-response', `Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        // Register with gateway
+        async function registerWithGateway() {
+            try {
+                showResponse('register-response', 'Registering with gateway...', '');
+                
+                const response = await fetch(`${API_BASE_URL}/register-with-gateway`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResponse('register-response', `${data.message}`, 'success');
+                } else {
+                    showResponse('register-response', `Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error registering with gateway:', error);
+                showResponse('register-response', `Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html>

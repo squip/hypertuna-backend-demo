@@ -1,0 +1,13 @@
+{
+  "nostr_pubkey_hex": "f9c91021ab6074cf4f95f479e364c1c7091dbdf63eb4de70bade343cc16e0455",
+  "nostr_nsec_hex": "531b76e21f83cf4e795664afbf355e9da6e844179b888e3b9db787af602c6682",
+  "proxy_privateKey": "d79f4d7cdd1174009b5a07bacc71eaf78624451d51da1f96b48f9a942360a19e",
+  "proxy_publicKey": "186385f20cd512a177e71f18616b8633f5ed4cc55ad34b285db4365ecdbfb2b8",
+  "proxy_seed": "d79f4d7cdd1174009b5a07bacc71eaf78624451d51da1f96b48f9a942360a19e",
+  "proxy_server_address": "hypertuna.com",
+  "gatewayUrl": "https://hypertuna.com",
+  "port": 1945,
+  "relays": [],
+  "registerWithGateway": true,
+  "registerInterval": 300000
+}
