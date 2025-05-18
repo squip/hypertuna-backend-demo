@@ -3,7 +3,6 @@
 import Autobee from './hypertuna-relay-helper.mjs';
 import b4a from 'b4a';
 import { randomBytes } from '@noble/hashes/utils';
-import { secp256k1 } from '@noble/curves/secp256k1';
 import { schnorr } from '@noble/curves/secp256k1';
 import { bytesToHex, hexToBytes } from '@noble/curves/abstract/utils';
 import { sha256 } from '@noble/hashes/sha256';
@@ -14,7 +13,8 @@ export { validateEvent, verifyEventSignature, getEventHash, serializeEvent };
 // Configuration for logging
 const LOG_CONFIG = {
   logFilePath: process.env.RELAY_LOG_PATH || './logs/relay-operations.log',
-  consoleOutput: process.env.CONSOLE_OUTPUT === 'false' || true,
+  // Disable console output only when the environment variable is explicitly set to 'false'
+  consoleOutput: process.env.CONSOLE_OUTPUT !== 'false',
   logLevel: process.env.LOG_LEVEL || 'info' // Possible values: debug, info, warn, error
 };
 
@@ -280,9 +280,6 @@ export default class NostrRelay extends Autobee {
     return `created_at:${NostrRelay.padTimestamp(event.created_at)}:id:${event.id}`;
   }
 
-  static padNumber(num, length) {
-    return num.toString().padStart(length, '0');
-  }
 
   // function to verify event object structure and attributes are valid + append valid event objects to hyperbee log
   // note: apply() method will take objects appended to hyperbee log + handle the final processes to 'put' new entries into the db.
